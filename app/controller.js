@@ -1,59 +1,52 @@
 
-app.controller("Tweet", ["$scope", "chatMessages", "getUser", "getUserTweets", "chatMessagesUser",
-    // Enviamos nuestr chatMessages al controller
-    function($scope, chatMessages,getUser, getUserTweets,chatMessagesUser) {
+app.controller("Tweet", ["$scope", "chatMessages", "getUser", "getUserTweets", "chatMessagesUser", "userList", "getFollowings",
+    function($scope, chatMessages,getUser, getUserTweets,chatMessagesUser, userList, getFollowings) {
         //$scope.user = "Enric";
         //veure els missatges de tothom
         $scope.messages = chatMessages;
+        $scope.usersToFollow  = userList;
+        console.log("mensajes",chatMessages)
+        console.log("users to follow", userList);
+        console.log("users to follow2", $scope.usersToFollow.name);
         //$scope.messages2 = chatMessagesUser;
 
         $scope.setUser = function() {
             $scope.userId = $scope.usuari;
+            console.log("USER ID", $scope.userId);
             var dades = getUser($scope.userId);
             $scope.userName = dades.nom;
             $scope.userDesc = dades.desc;
             $scope.userTweets = getUserTweets($scope.userId);
-            //$scope.followings = getFollowings($scope.userId);
+            $scope.followings = getFollowings($scope.userId);
+            console.log("SEGUITS: ", $scope.followings);
+
+            $scope.seguidoId = $scope.dadesSeguits;
+            //var dadesSeguits = getUser
+
+            $scope.tweetSeguidos = getUserTweets($scope.followings);
             //$scope.followingTweets = getFollowingTweets($scope.userId);
-            $scope.messages2 = chatMessagesUser($scope.userId);
+            //$scope.messages2 = chatMessagesUser($scope.userId);
 
             //console.log("tweets: "+$scope.userTweets);
 
 
 
         };
-        $scope.tweetejar = function() {
+
+
+        $scope.setTweet = function(){
             $scope.userTweets.$add({text: $scope.tweetTxt});
             $scope.tweetTxt = "";
-        }
 
-/*
-        $scope.user = "a";
-        // anyadimos el array de chatMessages al scope que usaremos en nuestro ng-repeat
-        $scope.messages = chatMessages;
-
-        // un metodo para crear nuevos mensajes; llamado desde ng-submit
-        $scope.addMessage = function() {
-            // calling $add on a synchronized array is like Array.push(),
-            // except that it saves the changes to our database!
-            $scope.messages.$add({
-                user: $scope.user,
-                text: $scope.message
-            });
-
-            // reset the message input
-            $scope.message = "";
         };
 
-        // if the messages are empty, add something for fun!
-        $scope.messages.$loaded(function() {
-            if ($scope.messages.length === 0) {
-                $scope.messages.$add({
-                    user: "Firebase Docs",
-                    text: "Hello world!"
-                });
-            }
-        });*/
+        $scope.follow = function() {
+            $scope.followings.$add({userId: $scope.usuari2Follow});//devuelve el id pero no los muestra
+            //console.log("TWEETS SEGUIDOS", $scope.userTweetsSeg);
+            $scope.usuari2Follow = "";
+
+        }
+
     }
 ]);
 app.factory("chatMessagesUser", ["$firebaseArray",
@@ -76,6 +69,17 @@ app.factory("chatMessages", ["$firebaseArray",
     }
 ]);
 
+app.factory("userList", ["$firebaseArray",
+    function($firebaseArray) {
+        console.log("ENTRA EN USER LIST")
+        // create a reference to the database location where we will store our data
+        var ref = new Firebase("https://ecaibtweet.firebaseio.com/users");
+
+        // this uses AngularFire to create the synchronized array
+        return $firebaseArray(ref);
+    }
+]);
+
 app.factory("getUser", ["$firebaseObject",
     function($firebaseObject) {
         return function(usuari) {
@@ -92,6 +96,15 @@ app.factory("getUserTweets", ["$firebaseArray",
             // create a reference to the database location where we will store our data
             var ref = new Firebase("https://ecaibtweet.firebaseio.com/users");
             return $firebaseArray(ref.child(usuari).child("tweets"));
+        };
+    }
+]);
+
+app.factory("getFollowings", ["$firebaseArray",
+    function($firebaseArray) {
+        return function(usuari) {
+            var ref = new Firebase("https://ecaibtweet.firebaseio.com/users");
+            return $firebaseArray(ref.child(usuari).child("following"));
         };
     }
 ]);
